@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<style type="text/css">
+		/*  Reset  */
+		body,div,h1,button,p{margin:0;padding:0}
+		button{font-family:inherit;font-size:inherit;font-style:inherit;font-weight:inherit;border:none;}
+		a:active,a:focus {outline: 0}
+
+		/*  Framing  */
+		.overlay{
+		  position:fixed; 
+		  background:url(http://i.imgur.com/OBfyVuA.gif); 
+		  width:100%;
+		  height:100%;
+		}
+		.sm{
+		  background:url(http://i.imgur.com/J01Odtr.png) no-repeat;
+		  position:relative;
+		  top: 100px;
+		  margin: 0 auto;
+		  width:774px;
+		  height:505px;
+		  padding:20px 0 20px 0;
+		}
+
+		/*  Text  */
+		h1{
+		  text-align:center;
+		  color:#FF403A;
+		  margin-top:40px;
+		  margin-right:150px;
+		  font: 45px 'Sancreek';
+		  text-shadow: 0px 3px 10px rgba(0,0,0,5)
+		}
+
+		p{
+		  color:#3C96E5;
+		  margin-top:5px;
+		  margin-right:150px;
+		  text-align:center;
+		  font:18px 'Sancreek';
+		  text-shadow: 0px 8px 10px rgba(0,0,0,0.1),
+		               0px 18px 23px rgba(0,0,0,0.1);
+		}
+
+		/*  Flesh  */
+		.slots{
+		  padding: 0 72px 0 92px;
+		  margin: 10px 200px 10px 50px;
+
+		}
+		  .slot {
+		      background: #fff;
+		      text-align:center;
+		      float: left;
+		      padding:0 10px;
+		      width: 80px;
+		      height: 100px;
+		      overflow: hidden;
+		      margin-right: 20px;
+		      border-radius: 5px;
+		      box-shadow: 0 2px 7px rgba(0,0,0,.3) inset;
+		  }
+		    .slot div {
+		      position: relative;
+		      top: -58px;
+		    }
+ 
+		.btn{
+		  padding:0 202px;
+		  margin: 10px 200px 10px 50px;
+		}
+		  button{
+		    background:#d9534f;
+		    color:#FFF;
+		    position:relative;
+		    padding:10px 30px;
+		    font-weight:900 !important;
+		    text-transform:uppercase;
+		    border-radius:5px;
+		    font:18px lato;
+		    opacity:0.8;
+		    letter-spacing:5px;
+		    text-decoration:none;
+		    box-shadow:#c0392b 0px 7px 2px,#000 0px 8px 5px;
+		  }
+		  button:hover{
+		    opacity:1;
+		  }
+		  button:active{
+		    top:4px;
+		    box-shadow:#c0392b 0px 3px 2px,#000 0px 3px 5px;
+		  }
+
+		/*  Utils  */
+		.clearfix:after {       
+		        content: ".";       
+		        visibility: hidden;       
+		        display: block;       
+		        height: 0;       
+		        clear: both; 
+		}
+	</style>
+</head>
+<body>
+	<link href='https://fonts.googleapis.com/css?family=Sancreek' rel='stylesheet'type='text/css'>
+	<link href='https://fonts.googleapis.com/css?family=Lato:400,900' rel='stylesheet' type='text/css'>
+	<div class="overlay">
+		<div class="sm">
+			<h1>What's for Breakfast?</h1>
+			<p>If you can't choose how to caffeinate give me a spin!</p>
+
+			<div class="slots clearfix">
+				<div class="slot">
+					<img src="http://i.imgur.com/IEr6qge.png" alt="FirstSlot">
+				</div>
+				<div class="slot">
+					<img src="http://i.imgur.com/FkB4PAb.png" alt="SecondSlot">
+				</div>
+				<div class="slot">
+					<img src="http://i.imgur.com/0lG88eE.png" alt="ThirdSlot">
+				</div>
+			</div>
+
+			<div class="btn">
+				<button id="spin">Spin</button>
+			</div>
+			<p id="status">Spin that Sucker!</p>
+
+		</div>
+	</div>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"> </script>
+<script>
+/*  requestAnimationFrame polyfill  */
+	(function() {
+		var lastTime = 0;
+	 	var vendors = ['ms', 'moz', 'webkit', 'o'];
+	    for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+	        window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
+	        window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame'] 
+	                                   || window[vendors[x]+'CancelRequestAnimationFrame'];
+	    }
+ 
+	    if (!window.requestAnimationFrame)
+	        window.requestAnimationFrame = function(callback, element) {
+	            var currTime = new Date().getTime();
+	            var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+	            var id = window.setTimeout(function() { callback(currTime + timeToCall); }, 
+	              timeToCall);
+	            lastTime = currTime + timeToCall;
+	            return id;
+	        };
+ 
+	    if (!window.cancelAnimationFrame)
+	        window.cancelAnimationFrame = function(id) {
+	            clearTimeout(id);
+	        };
+	}());
+
+/*  Slot Machine Game  */
+	var slotMachine = slotMachine || {};
+	var kisses = 0; //lucky kisses
+	$('button').click(function(){slotMachine.init.spin()});
+	$('img').click(function(){ kisses++; }); //keeping count of our lucky kisses
+  
+	slotMachine.init = (function(){
+		var reels = []; // an array that represents the status of each reel
+		var startTime,currentTime; //variables for keeping time when animating
+		var intId = intId || 0; //id to stop animation
+		var status = "Ready? call slotMachine.init.spin() or Click SPIN button"; // used for debugging in console
+		console.log(status);
+		var idleTime = 1000; // animating time in ms
+		var $status = $("#status"); //status message shown
+		
+	  	return{ 
+		    // call random to get your 3 reel statuses, then call function to spin the reels.  
+			spin: function(){ 
+			    for(var i = 0; i< 3; i++){
+			    	reels[i] = Math.random()*3 | 0; 
+			    }
+				$status.html("Spinning...");
+			    if(kisses > 0) slotMachine.init.kiss(); //hoping for luck
+				slotMachine.init.wait();
+			},
+
+		    // define a starting point, for each slot scroll down the containing element until the time 
+		    //  from the starting point and current time have a difference of idleTime  
+			wait: function(currentTime){
+				if(!startTime) startTime = currentTime;
+				var dt = currentTime - startTime || 0;
+
+	    		$('.slot').each(function(index,element){ 
+	      			element.scrollTop =  (idleTime/2 * (idleTime - dt)*(idleTime-dt) + (reels[index]*80)) % 240 | 0; 
+	    	  	});
+
+				if(dt < idleTime){
+					intId = requestAnimationFrame(slotMachine.init.wait);
+				}else{
+					startTime = undefined;
+					slotMachine.init.check();
+				}
+	
+			},
+
+		    // stop the animation, check if reels match, if so find out what was won.
+			check: function(){
+				cancelAnimationFrame(intId)
+				console.log("Results are: [%s][%s][%s]",reels[0],reels[1],reels[2]) // used for debugging in console
+			    kisses = 0;
+				if(reels[0] == reels[1] && reels[1] == reels[2]) 
+					slotMachine.init.serve(reels[0]) 
+			    else
+					$status.html("Sorrymate, spin again")
+			},
+
+		    // the prizes are hardcoded into either 0, 1, or 2.   
+			serve: function(result){
+			    if(result == 0)
+					$status.html("Congrats! You are getting some Tea");
+			    else if(result == 1)
+					$status.html("Congrats! You are getting some Espresso");
+			    else if(result == 2)
+					$status.html("Congrats! You are getting some Coffee");
+			},
+			//luck via less randomization.
+			kiss: function(){
+			    reels[0] = reels[1]; 
+			}
+		};
+	})(); 
+</script>
+</body>
+</html>
